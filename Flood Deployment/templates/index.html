@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-Net Image Segmentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+        }
+        #output {
+            display: none;
+            margin-top: 20px;
+        }
+        .image-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-container img {
+            width: 300px;
+            border: 2px solid #ccc;
+            padding: 5px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload a TIFF Image for Segmentation</h1>
+
+    <form id="upload-form">
+        <input type="file" id="image-input" accept=".tif, .tiff">
+        <button type="submit">Upload and Predict</button>
+    </form>
+
+    <div id="output">
+        <h2>Results:</h2>
+        <div class="image-container">
+            <div>
+                <p>Original Image:</p>
+                <img id="original-img" src="" alt="Original Image">
+            </div>
+            <div>
+                <p>Predicted Mask:</p>
+                <img id="mask-img" src="" alt="Predicted Mask">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("upload-form").addEventListener("submit", function(event) {
+            event.preventDefault(); 
+    
+            let formData = new FormData();
+            let fileInput = document.getElementById("image-input").files[0];
+    
+            if (!fileInput) {
+                alert("Please select an image first!");
+                return;
+            }
+    
+            formData.append("file", fileInput);
+    
+            fetch("/predict", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    let timestamp = new Date().getTime();  // Forces browser to reload image
+                    document.getElementById("original-img").src = data.original_url + "?t=" + timestamp;
+                    document.getElementById("mask-img").src = data.mask_url + "?t=" + timestamp;
+                    document.getElementById("output").style.display = "block";
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+    
+</body>
+</html>
